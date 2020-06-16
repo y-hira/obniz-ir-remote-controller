@@ -1,0 +1,107 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" />
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src="https://unpkg.com/obniz@3.6.1/obniz.js" crossorigin="anonymous"></script>
+    <script src="./IRCommands_Panasonic_AirCon.js"></script>
+
+</head>
+
+<body>
+    <div id="obniz-debug"></div>
+
+    <div class="container">
+        <h3 class="text-center">IR remote controller for Panasonic Air Conditioner</h3>
+        <div class="form-group">
+            <form name="formAircon" id="formAircon" onsubmit="return false;">
+                <div class="row">
+                    <div class="col-4">
+                        <label for="selectMode">Mode:</label>
+                        <select id="selectMode" class="form-control"></select>
+                    </div>
+                    <div class="col-4">
+                        <label for="selectPower">Power:</label>
+                        <select id="selectPower" class="form-control"></select>
+                    </div>
+                    <div class="col-4">
+                        <label for="selectAirVolume">AirVolume:</label>
+                        <select id="selectAirVolume" class="form-control"></select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-4">
+                        <label for="selectWindDirection">WindDirection:</label>
+                        <select id="selectWindDirection" class="form-control"></select>
+                    </div>
+                    <div class="col-4">
+                        <label for="selectTimerHour">TimerHour:</label>
+                        <select id="selectTimerHour" class="form-control"></select>
+                    </div>
+                    <div class="col-4">
+                        <label for="selectPresetTemp">PresetTemp:</label>
+                        <select id="selectPresetTemp" class="form-control"></select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-4"></div>
+                    <div class="col-4">
+                        <button class="btn btn-primary btn-block" onclick="sendAircon()">送信</button>
+                    </div>
+                    <div class="col-4"></div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        var obniz = new Obniz("OBNIZ_ID_HERE");
+        let pana = new IRCommands_Panasonic_AirCon();
+        let led;
+
+        obniz.onconnect = async function () {
+            let irsensor = obniz.wired('IRSensor', { vcc: 0, gnd: 1, output: 2 });
+            led = obniz.wired('InfraredLED', { anode: 3, cathode: 4 });
+
+            irsensor.start();
+            irsensor.ondetect = (arr) => {
+                console.log('detected!!');
+                console.log(pana.decodeAEHA(arr));
+            }
+        };
+
+        let cmdref = pana.commands();
+        Object.keys(cmdref).forEach((key) => {
+            for (let i = 0; i < cmdref[key].length; i++) {
+                let param = { text: cmdref[key][i].name, value: cmdref[key][i].key };
+                if (cmdref[key][i].default == true) {
+                    param.selected = true;
+                }
+                $('#select' + key).attr("name", key);
+                $('#select' + key).append($('<option></option>', param));
+            }
+        });
+
+        function sendAircon() {
+            let formData = new FormData($('form[name=formAircon]').get(0));
+            let setting = {};
+            let M = pana.commandEnum();
+            for (item of formData) {
+                setting[item[0]] = M[item[1]];
+            }
+            // console.log(setting);
+            let cmd = pana.getSignalBytes(setting);
+            let str_hex = cmd.reduce((acc, cur) => {
+                return acc + `${cur.toString(16).toUpperCase()}, `;
+            }, '');
+            // console.log(str_hex);
+            // console.log(pana.encodeAEHA(cmd));
+            led.send(pana.encodeAEHA(cmd));
+        }
+
+    </script>
+</body>
+
+</html>
