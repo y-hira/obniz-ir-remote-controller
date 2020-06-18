@@ -7,7 +7,6 @@
     <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script src="https://unpkg.com/obniz@3.6.1/obniz.js" crossorigin="anonymous"></script>
     <script src="./IRCommands_Panasonic_AirCon.js"></script>
-
 </head>
 
 <body>
@@ -92,13 +91,8 @@
                 setting[item[0]] = M[item[1]];
             }
             // console.log(setting);
-            let cmd = pana.getSignalBytes(setting);
-            let str_hex = cmd.reduce((acc, cur) => {
-                return acc + `${cur.toString(16).toUpperCase()}, `;
-            }, '');
-            // console.log(str_hex);
-            // console.log(pana.encodeAEHA(cmd));
-            led.send(pana.encodeAEHA(cmd));
+            let cmd = pana.getSignal(setting);
+            led.send(cmd);
         }
 
     </script>

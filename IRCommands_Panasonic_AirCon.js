@@ -1,5 +1,8 @@
 class IRCommands_Panasonic_AirCon {
     constructor() {
+        this.data_symbol_ms = 0.07;
+        this.T_unit_ms = 0.445;
+        this.trailer_ms = 12;
     }
 
     commands() {
@@ -77,6 +80,10 @@ class IRCommands_Panasonic_AirCon {
         return M;
     }
 
+    getCallSign() {
+        let arr = [0x02, 0x20, 0x0E, 0x04, 0x00, 0x00, 0x00, 0x06];
+        return arr;
+    }
 
     getSignalBytes(s) {
         let arr = [0x02, 0x20, 0xE0, 0x04, 0x00];
@@ -160,8 +167,15 @@ class IRCommands_Panasonic_AirCon {
         console.log(str_hex);
     }
 
-    encodeAEHA(arr, dataSymbolLength = 0.07, T = 0.445) {
-        let Tcnt = Math.round(T / dataSymbolLength);
+    getSignal(s) {
+        let callsign = this.encodeAEHA(this.getCallSign());
+        let signal = this.encodeAEHA(this.getSignalBytes(s));
+        return callsign.concat(signal);
+    }
+
+    encodeAEHA(arr) {
+        let Tcnt = Math.round(this.T_unit_ms / this.data_symbol_ms);
+        let trailerCnt = Math.ceil(this.trailer_ms / this.data_symbol_ms);
         let leader = [];
         leader = leader.concat(new Array(Tcnt * 8).fill(1));
         leader = leader.concat(new Array(Tcnt * 4).fill(0));
@@ -175,10 +189,11 @@ class IRCommands_Panasonic_AirCon {
             }
             return acc;
         }, leader);
-        return result;
+        let trailerRaw = new Array(Tcnt).fill(1).concat(new Array(trailerCnt).fill(0));
+        return result.concat(trailerRaw);
     }
 
-    decodeAEHA(arr, dataSymbolLength = 0.07) {
+    decodeAEHA(arr) {
         let currentValue = 1;
         let currentCount = 0;
         let counts = arr.reduce((acc, cur, idx, src) => {
@@ -195,8 +210,8 @@ class IRCommands_Panasonic_AirCon {
             return acc;
         }, []);
 
-        let T_maxcnt = Math.round(0.5 / dataSymbolLength);
-        let T_mincnt = Math.round(0.35 / dataSymbolLength);
+        let T_maxcnt = Math.round(0.5 / this.data_symbol_ms);
+        let T_mincnt = Math.round(0.35 / this.data_symbol_ms);
         let count2d = counts.reduce((acc, cur, idx, src) => {
             if (idx % 2 == 0) {
             } else {
@@ -217,7 +232,7 @@ class IRCommands_Panasonic_AirCon {
         }, []);
 
         let hex_tmp = 0;
-        hex = bin.reduce((acc, cur, idx, src) => {
+        let hex = bin.reduce((acc, cur, idx, src) => {
             hex_tmp |= cur << (idx % 8);
             if (idx % 8 == 7) {
                 acc.push(hex_tmp);
@@ -238,6 +253,7 @@ class IRCommands_Panasonic_AirCon {
         };
         console.log(params);
         */
+        // console.log({ count2d, bin, hex, str_hex });
         return hex;
     }
 
