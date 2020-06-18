@@ -29,11 +29,11 @@ class IRCommands_Panasonic_AirCon {
             ],
             WindDirection: [
                 { key: "WindDirectionAuto", value: 0xF, name: "オート" },
-                { key: "WindDirection1", value: 0x1, name: "1" },
+                { key: "WindDirection1", value: 0x1, name: "1（上）" },
                 { key: "WindDirection2", value: 0x2, name: "2" },
                 { key: "WindDirection3", value: 0x3, name: "3" },
                 { key: "WindDirection4", value: 0x4, name: "4" },
-                { key: "WindDirection5", value: 0x5, name: "4" },
+                { key: "WindDirection5", value: 0x5, name: "5（下）" },
             ],
             TimerHour: [
                 { key: "TimerHourOff", value: [0x06, 0x60], name: "OFF" },
